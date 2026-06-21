@@ -1,0 +1,73 @@
+[build-system]
+requires = ["hatchling>=1.25.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "amta-core"
+version = "0.1.0.dev0"
+description = "Project-agnostic graph governance, persistent memory, and traceability engine for agents."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+  { name = "AMTA Core Contributors" }
+]
+keywords = [
+  "agents",
+  "governance",
+  "knowledge-graph",
+  "memory",
+  "traceability",
+  "markdown",
+  "cli"
+]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Documentation",
+  "Topic :: Software Development :: Quality Assurance"
+]
+dependencies = [
+  "pydantic>=2.7,<3.0",
+  "networkx>=3.3,<4.0",
+  "python-frontmatter>=1.1,<2.0",
+  "PyYAML>=6.0,<7.0",
+  "typer>=0.12,<1.0",
+  "jinja2>=3.1,<4.0"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.2,<9.0",
+  "pytest-cov>=5.0,<6.0",
+  "ruff>=0.5,<1.0",
+  "mypy>=1.10,<2.0",
+  "types-PyYAML>=6.0,<7.0",
+  "types-networkx>=3.0,<4.0"
+]
+
+[project.scripts]
+amta = "amta.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["amta"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
