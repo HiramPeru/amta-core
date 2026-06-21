@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
-
 import networkx as nx
 
 from amta.models import (
@@ -89,7 +87,7 @@ def build_graph_model(
     edges = build_edges(sorted_nodes)
     statistics = compute_statistics(sorted_nodes, edges)
 
-    timestamp = generated_at or datetime.now(UTC).replace(microsecond=0).isoformat()
+    timestamp = generated_at or "1970-01-01T00:00:00+00:00"
 
     return GraphModel(
         workspace=config.workspace.id,

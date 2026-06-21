@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +10,18 @@ from amta.graph import build_graph_model
 from amta.models import ConfigModel, GraphModel, NodeModel, NodeStatus, NodeType
 
 GENERATED_DIRNAME = "generated"
+
+
+def _resolve_generated_at(nodes: list[NodeModel], generated_at: str | None) -> str:
+    """Resolve a deterministic artifact timestamp."""
+    if generated_at is not None:
+        return generated_at
+
+    updated_dates = sorted(node.updated.isoformat() for node in nodes)
+    if not updated_dates:
+        return "1970-01-01T00:00:00+00:00"
+
+    return f"{updated_dates[-1]}T00:00:00+00:00"
 
 
 def build_workspace_artifacts(
@@ -21,7 +32,7 @@ def build_workspace_artifacts(
     generated_at: str | None = None,
 ) -> GraphModel:
     """Build all enabled workspace artifacts."""
-    timestamp = generated_at or datetime.now(UTC).replace(microsecond=0).isoformat()
+    timestamp = _resolve_generated_at(nodes, generated_at)
     graph_model = build_graph_model(nodes, config, generated_at=timestamp)
 
     output_dir = Path(workspace_dir) / GENERATED_DIRNAME

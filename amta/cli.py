@@ -141,7 +141,6 @@ def build(
     typer.echo(f"PASS: generated artifacts in {workspace_dir / 'generated'}")
 
 
-
 @app.command("schemas")
 def schemas_command(
     output: Annotated[
