@@ -1,0 +1,24 @@
+workspace:
+  id: amta-core
+  name: AMTA Core
+  version: 1
+  namespace: hiram
+owners:
+  - architecture
+graph:
+  relation_types:
+    - depends_on
+    - impacts
+validation:
+  fail_on_warnings: false
+  enforce_owners: true
+  enforce_cycles: true
+  relation_catalog_mode: lax
+build:
+  generate_graph: true
+  generate_manifest: true
+  generate_state: true
+  generate_roadmap: true
+  generate_changelog: true
+metadata:
+  created_by: amta init
