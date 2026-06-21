@@ -11,6 +11,7 @@ from amta.builder import build_workspace_artifacts
 from amta.config import CONFIG_FILENAME, WORKSPACE_DIRNAME, find_workspace_dir, load_config
 from amta.errors import AmtaConfigError, AmtaParseError
 from amta.parser import parse_workspace_nodes
+from amta.schemas import write_schemas
 from amta.validator import ValidationResult, ValidationStatus, validate_nodes
 
 app = typer.Typer(
@@ -138,6 +139,20 @@ def build(
 
     build_workspace_artifacts(nodes, config, workspace_dir)
     typer.echo(f"PASS: generated artifacts in {workspace_dir / 'generated'}")
+
+
+
+@app.command("schemas")
+def schemas_command(
+    output: Annotated[
+        Path,
+        typer.Option("--output", "-o", help="Directory where JSON schemas will be written."),
+    ] = Path("schemas"),
+) -> None:
+    """Generate public AMTA JSON schemas."""
+    written = write_schemas(output)
+    for path in written.values():
+        typer.echo(f"PASS: wrote {path}")
 
 
 def _print_validation_result(result: ValidationResult) -> None:

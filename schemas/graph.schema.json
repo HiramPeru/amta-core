@@ -1,0 +1,291 @@
+{
+  "$defs": {
+    "EdgeModel": {
+      "additionalProperties": false,
+      "description": "Serialized graph edge.",
+      "properties": {
+        "relation": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Relation",
+          "type": "string"
+        },
+        "source": {
+          "pattern": "^[A-Z]{3}-[0-9]{3,}$",
+          "title": "Source",
+          "type": "string"
+        },
+        "target": {
+          "pattern": "^[A-Z]{3}-[0-9]{3,}$",
+          "title": "Target",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "target",
+        "relation"
+      ],
+      "title": "EdgeModel",
+      "type": "object"
+    },
+    "NodeModel": {
+      "additionalProperties": false,
+      "description": "Local AMTA node model.",
+      "properties": {
+        "body": {
+          "default": "",
+          "title": "Body",
+          "type": "string"
+        },
+        "created": {
+          "format": "date",
+          "title": "Created",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[A-Z]{3}-[0-9]{3,}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "owner": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Owner",
+          "type": "string"
+        },
+        "relations": {
+          "items": {
+            "$ref": "#/$defs/RelationModel"
+          },
+          "title": "Relations",
+          "type": "array"
+        },
+        "revision": {
+          "minimum": 1,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "status": {
+          "$ref": "#/$defs/NodeStatus"
+        },
+        "summary": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Summary",
+          "type": "string"
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        },
+        "title": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/NodeType"
+        },
+        "updated": {
+          "format": "date",
+          "title": "Updated",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "status",
+        "title",
+        "summary",
+        "owner",
+        "revision",
+        "created",
+        "updated"
+      ],
+      "title": "NodeModel",
+      "type": "object"
+    },
+    "NodeStatus": {
+      "description": "Supported AMTA node states for v0.1.",
+      "enum": [
+        "proposed",
+        "active",
+        "blocked",
+        "completed",
+        "deprecated"
+      ],
+      "title": "NodeStatus",
+      "type": "string"
+    },
+    "NodeType": {
+      "description": "Supported AMTA node types for v0.1.",
+      "enum": [
+        "decision",
+        "task",
+        "constraint",
+        "incident",
+        "module",
+        "event"
+      ],
+      "title": "NodeType",
+      "type": "string"
+    },
+    "RelationModel": {
+      "additionalProperties": false,
+      "description": "Directed relation declared by a node.",
+      "properties": {
+        "target": {
+          "pattern": "^[A-Z]{3}-[0-9]{3,}$",
+          "title": "Target",
+          "type": "string"
+        },
+        "type": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "target"
+      ],
+      "title": "RelationModel",
+      "type": "object"
+    },
+    "StatisticsModel": {
+      "additionalProperties": false,
+      "description": "Graph statistics.",
+      "properties": {
+        "total_active": {
+          "default": 0,
+          "title": "Total Active",
+          "type": "integer"
+        },
+        "total_blocked": {
+          "default": 0,
+          "title": "Total Blocked",
+          "type": "integer"
+        },
+        "total_completed": {
+          "default": 0,
+          "title": "Total Completed",
+          "type": "integer"
+        },
+        "total_constraints": {
+          "default": 0,
+          "title": "Total Constraints",
+          "type": "integer"
+        },
+        "total_decisions": {
+          "default": 0,
+          "title": "Total Decisions",
+          "type": "integer"
+        },
+        "total_deprecated": {
+          "default": 0,
+          "title": "Total Deprecated",
+          "type": "integer"
+        },
+        "total_edges": {
+          "default": 0,
+          "title": "Total Edges",
+          "type": "integer"
+        },
+        "total_events": {
+          "default": 0,
+          "title": "Total Events",
+          "type": "integer"
+        },
+        "total_incidents": {
+          "default": 0,
+          "title": "Total Incidents",
+          "type": "integer"
+        },
+        "total_modules": {
+          "default": 0,
+          "title": "Total Modules",
+          "type": "integer"
+        },
+        "total_nodes": {
+          "default": 0,
+          "title": "Total Nodes",
+          "type": "integer"
+        },
+        "total_proposed": {
+          "default": 0,
+          "title": "Total Proposed",
+          "type": "integer"
+        },
+        "total_tasks": {
+          "default": 0,
+          "title": "Total Tasks",
+          "type": "integer"
+        }
+      },
+      "title": "StatisticsModel",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Serializable graph artifact model.",
+  "properties": {
+    "edges": {
+      "items": {
+        "$ref": "#/$defs/EdgeModel"
+      },
+      "title": "Edges",
+      "type": "array"
+    },
+    "generated_at": {
+      "title": "Generated At",
+      "type": "string"
+    },
+    "namespace": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Namespace"
+    },
+    "nodes": {
+      "items": {
+        "$ref": "#/$defs/NodeModel"
+      },
+      "title": "Nodes",
+      "type": "array"
+    },
+    "statistics": {
+      "$ref": "#/$defs/StatisticsModel"
+    },
+    "version": {
+      "default": "1.0",
+      "title": "Version",
+      "type": "string"
+    },
+    "workspace": {
+      "title": "Workspace",
+      "type": "string"
+    }
+  },
+  "required": [
+    "workspace",
+    "generated_at",
+    "statistics",
+    "nodes",
+    "edges"
+  ],
+  "title": "GraphModel",
+  "type": "object"
+}

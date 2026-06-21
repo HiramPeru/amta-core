@@ -1,0 +1,163 @@
+{
+  "$defs": {
+    "BuildConfigModel": {
+      "additionalProperties": false,
+      "description": "Build configuration.",
+      "properties": {
+        "generate_changelog": {
+          "default": true,
+          "title": "Generate Changelog",
+          "type": "boolean"
+        },
+        "generate_graph": {
+          "default": true,
+          "title": "Generate Graph",
+          "type": "boolean"
+        },
+        "generate_manifest": {
+          "default": true,
+          "title": "Generate Manifest",
+          "type": "boolean"
+        },
+        "generate_roadmap": {
+          "default": true,
+          "title": "Generate Roadmap",
+          "type": "boolean"
+        },
+        "generate_state": {
+          "default": true,
+          "title": "Generate State",
+          "type": "boolean"
+        }
+      },
+      "title": "BuildConfigModel",
+      "type": "object"
+    },
+    "GraphConfigModel": {
+      "additionalProperties": false,
+      "description": "Graph configuration and catalogs.",
+      "properties": {
+        "relation_types": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Relation Types",
+          "type": "array"
+        }
+      },
+      "title": "GraphConfigModel",
+      "type": "object"
+    },
+    "ValidationConfigModel": {
+      "additionalProperties": false,
+      "description": "Validation configuration.",
+      "properties": {
+        "enforce_cycles": {
+          "default": true,
+          "title": "Enforce Cycles",
+          "type": "boolean"
+        },
+        "enforce_owners": {
+          "default": true,
+          "title": "Enforce Owners",
+          "type": "boolean"
+        },
+        "fail_on_warnings": {
+          "default": false,
+          "title": "Fail On Warnings",
+          "type": "boolean"
+        },
+        "relation_catalog_mode": {
+          "$ref": "#/$defs/ValidationMode",
+          "default": "lax"
+        }
+      },
+      "title": "ValidationConfigModel",
+      "type": "object"
+    },
+    "ValidationMode": {
+      "description": "Validation behavior for configurable catalogs.",
+      "enum": [
+        "strict",
+        "lax"
+      ],
+      "title": "ValidationMode",
+      "type": "string"
+    },
+    "WorkspaceModel": {
+      "additionalProperties": false,
+      "description": "AMTA workspace identity.",
+      "properties": {
+        "id": {
+          "pattern": "^[a-z0-9-]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "namespace": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Namespace"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "version"
+      ],
+      "title": "WorkspaceModel",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "AMTA workspace configuration.",
+  "properties": {
+    "build": {
+      "$ref": "#/$defs/BuildConfigModel"
+    },
+    "graph": {
+      "$ref": "#/$defs/GraphConfigModel"
+    },
+    "metadata": {
+      "additionalProperties": true,
+      "title": "Metadata",
+      "type": "object"
+    },
+    "owners": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Owners",
+      "type": "array"
+    },
+    "validation": {
+      "$ref": "#/$defs/ValidationConfigModel"
+    },
+    "workspace": {
+      "$ref": "#/$defs/WorkspaceModel"
+    }
+  },
+  "required": [
+    "workspace",
+    "owners"
+  ],
+  "title": "ConfigModel",
+  "type": "object"
+}

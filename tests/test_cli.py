@@ -135,3 +135,13 @@ Body.
     assert (tmp_path / ".amta" / "generated" / "STATE.md").exists()
     assert (tmp_path / ".amta" / "generated" / "ROADMAP.md").exists()
     assert (tmp_path / ".amta" / "generated" / "CHANGELOG.md").exists()
+
+
+def test_cli_schemas_generates_json_schemas(tmp_path: Path) -> None:
+    result = runner.invoke(app, ["schemas", "--output", str(tmp_path)])
+
+    assert result.exit_code == 0
+    assert "PASS: wrote" in result.output
+    assert (tmp_path / "node.schema.json").exists()
+    assert (tmp_path / "config.schema.json").exists()
+    assert (tmp_path / "graph.schema.json").exists()
