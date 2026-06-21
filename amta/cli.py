@@ -10,6 +10,7 @@ import typer
 from amta.builder import build_workspace_artifacts
 from amta.config import CONFIG_FILENAME, WORKSPACE_DIRNAME, find_workspace_dir, load_config
 from amta.errors import AmtaConfigError, AmtaParseError
+from amta.importer import AmtaImportError, import_context
 from amta.parser import parse_workspace_nodes
 from amta.schemas import write_schemas
 from amta.validator import ValidationResult, ValidationStatus, validate_nodes
@@ -139,6 +140,37 @@ def build(
 
     build_workspace_artifacts(nodes, config, workspace_dir)
     typer.echo(f"PASS: generated artifacts in {workspace_dir / 'generated'}")
+
+
+@app.command("import-context")
+def import_context_command(
+    path: Annotated[
+        Path,
+        typer.Option("--path", "-p", help="Repository path to import from."),
+    ] = Path("."),
+    overwrite: Annotated[
+        bool,
+        typer.Option("--overwrite", help="Rewrite previously imported nodes."),
+    ] = False,
+) -> None:
+    """Import legacy context Markdown into AMTA nodes."""
+    try:
+        result = import_context(path, overwrite=overwrite)
+    except AmtaImportError as exc:
+        typer.echo(f"FAIL: {exc}", err=True)
+        raise typer.Exit(code=3) from exc
+
+    for warning in result.warnings:
+        suffix = f" [{warning.source_path}]" if warning.source_path else ""
+        typer.echo(f"WARN {warning.code}{suffix}: {warning.message}")
+
+    for imported_node in result.imported_nodes:
+        typer.echo(
+            "PASS: imported "
+            f"{imported_node.source_path} -> {imported_node.node_path}"
+        )
+
+    typer.echo(f"PASS: imported {len(result.imported_nodes)} node(s)")
 
 
 @app.command("schemas")
