@@ -11,6 +11,7 @@ from amta.builder import (
 )
 from amta.graph import build_graph_model
 from amta.models import ConfigModel, NodeModel, RelationModel
+from amta.validator import ValidationStatus
 
 
 def make_config() -> ConfigModel:
@@ -100,7 +101,32 @@ def test_render_state_md() -> None:
 
     assert "# STATE" in content
     assert "- Workspace: `amta-core`" in content
+    assert "- Status: `PASS`" in content
     assert "- Nodes: 1" in content
+
+
+def test_render_state_md_with_warn_status() -> None:
+    graph_model = build_graph_model(
+        [make_node("DEC-001", "decision")],
+        make_config(),
+        generated_at="2026-06-21T00:00:00+00:00",
+    )
+
+    content = render_state_md(graph_model, validation_status=ValidationStatus.WARN)
+
+    assert "- Status: `WARN`" in content
+
+
+def test_render_state_md_with_fail_status() -> None:
+    graph_model = build_graph_model(
+        [make_node("DEC-001", "decision")],
+        make_config(),
+        generated_at="2026-06-21T00:00:00+00:00",
+    )
+
+    content = render_state_md(graph_model, validation_status=ValidationStatus.FAIL)
+
+    assert "- Status: `FAIL`" in content
 
 
 def test_render_roadmap_md_only_non_completed_tasks() -> None:

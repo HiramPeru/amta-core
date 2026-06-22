@@ -138,7 +138,12 @@ def build(
     if result.status is ValidationStatus.WARN and config.validation.fail_on_warnings:
         raise typer.Exit(code=3)
 
-    build_workspace_artifacts(nodes, config, workspace_dir)
+    build_workspace_artifacts(
+        nodes,
+        config,
+        workspace_dir,
+        validation_status=result.status,
+    )
     typer.echo(f"PASS: generated artifacts in {workspace_dir / 'generated'}")
 
 
@@ -153,7 +158,12 @@ def import_context_command(
         typer.Option("--overwrite", help="Rewrite previously imported nodes."),
     ] = False,
 ) -> None:
-    """Import legacy context Markdown into AMTA nodes."""
+    """Import legacy context Markdown into AMTA nodes.
+
+    This is a best-effort operation. AMTA infers node types from file names,
+    paths, and content heuristics. Imported nodes must be reviewed before
+    being treated as authoritative project knowledge.
+    """
     try:
         result = import_context(path, overwrite=overwrite)
     except AmtaImportError as exc:

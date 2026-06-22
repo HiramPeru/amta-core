@@ -40,7 +40,7 @@ def test_cli_init_fails_if_workspace_exists(tmp_path: Path) -> None:
     assert "workspace already exists" in second.output
 
 
-def test_cli_validate_warns_on_empty_workspace(tmp_path: Path) -> None:
+def test_cli_validate_passes_on_empty_workspace(tmp_path: Path) -> None:
     runner.invoke(app, ["init", "--path", str(tmp_path)])
 
     result = runner.invoke(app, ["validate", "--path", str(tmp_path)])

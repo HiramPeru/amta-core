@@ -8,12 +8,18 @@ from typing import Any
 
 from amta.graph import build_graph_model
 from amta.models import ConfigModel, GraphModel, NodeModel, NodeStatus, NodeType
+from amta.validator import ValidationStatus
 
 GENERATED_DIRNAME = "generated"
 
 
 def _resolve_generated_at(nodes: list[NodeModel], generated_at: str | None) -> str:
-    """Resolve a deterministic artifact timestamp."""
+    """Resolve a deterministic artifact timestamp.
+
+    When generated_at is not provided, AMTA derives the timestamp from the
+    latest node updated date to preserve reproducible builds. The derived
+    value is an artifact timestamp, not necessarily the real execution time.
+    """
     if generated_at is not None:
         return generated_at
 
@@ -30,6 +36,7 @@ def build_workspace_artifacts(
     workspace_dir: str | Path,
     *,
     generated_at: str | None = None,
+    validation_status: ValidationStatus = ValidationStatus.PASS,
 ) -> GraphModel:
     """Build all enabled workspace artifacts."""
     timestamp = _resolve_generated_at(nodes, generated_at)
@@ -45,7 +52,10 @@ def build_workspace_artifacts(
         artifacts.append("GRAPH.json")
 
     if config.build.generate_state:
-        _write_text(output_dir / "STATE.md", render_state_md(graph_model))
+        _write_text(
+            output_dir / "STATE.md",
+            render_state_md(graph_model, validation_status=validation_status),
+        )
         artifacts.append("STATE.md")
 
     if config.build.generate_roadmap:
@@ -95,7 +105,11 @@ def render_manifest_json(
     return json.dumps(payload, indent=2, sort_keys=True) + "\n"
 
 
-def render_state_md(graph_model: GraphModel) -> str:
+def render_state_md(
+    graph_model: GraphModel,
+    *,
+    validation_status: ValidationStatus = ValidationStatus.PASS,
+) -> str:
     """Render STATE.md."""
     stats = graph_model.statistics
     return "\n".join(
@@ -111,7 +125,7 @@ def render_state_md(graph_model: GraphModel) -> str:
             "",
             "## Graph Health",
             "",
-            "- Status: `PASS`",
+            f"- Status: `{validation_status.value}`",
             "",
             "## Statistics",
             "",
