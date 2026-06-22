@@ -288,6 +288,8 @@ def _query_related_nodes(
     direction: QueryDirection,
     depth: int,
 ) -> list[tuple[int, str, str, str, str, NodeModel]]:
+    # TODO(v0.2.x): consider replacing manual adjacency indexes with
+    # NetworkX traversal helpers once query features require richer graph semantics.
     nodes_by_id = {node.id: node for node in graph_model.nodes}
 
     outgoing: dict[str, list[tuple[str, str, str]]] = {}
