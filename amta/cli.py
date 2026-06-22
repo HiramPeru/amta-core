@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from enum import StrEnum
 from pathlib import Path
 from typing import Annotated
 
@@ -10,10 +11,21 @@ import typer
 from amta.builder import build_workspace_artifacts
 from amta.config import CONFIG_FILENAME, WORKSPACE_DIRNAME, find_workspace_dir, load_config
 from amta.errors import AmtaConfigError, AmtaParseError
+from amta.graph import build_graph_model
 from amta.importer import AmtaImportError, import_context
+from amta.models import GraphModel, NodeModel
 from amta.parser import parse_workspace_nodes
 from amta.schemas import write_schemas
 from amta.validator import ValidationResult, ValidationStatus, validate_nodes
+
+
+class QueryDirection(StrEnum):
+    """Supported graph query traversal directions."""
+
+    UPSTREAM = "upstream"
+    DOWNSTREAM = "downstream"
+    BOTH = "both"
+
 
 app = typer.Typer(
     name="amta",
@@ -183,6 +195,78 @@ def import_context_command(
     typer.echo(f"PASS: imported {len(result.imported_nodes)} node(s)")
 
 
+
+@app.command("query")
+def query_command(
+    path: Annotated[
+        Path,
+        typer.Option("--path", "-p", help="Path inside an AMTA workspace."),
+    ] = Path("."),
+    node_id: Annotated[
+        str,
+        typer.Option("--id", help="Node id to query."),
+    ] = "",
+    direction: Annotated[
+        QueryDirection,
+        typer.Option("--direction", "-d", help="Traversal direction."),
+    ] = QueryDirection.BOTH,
+    depth: Annotated[
+        int,
+        typer.Option("--depth", help="Traversal depth.", min=1),
+    ] = 1,
+) -> None:
+    """Query AMTA graph relationships."""
+    if not node_id:
+        typer.echo("FAIL: --id is required", err=True)
+        raise typer.Exit(code=3)
+
+    try:
+        workspace_dir = find_workspace_dir(path)
+        config = load_config(workspace_dir)
+        nodes = parse_workspace_nodes(workspace_dir)
+        result = validate_nodes(nodes, config)
+    except (AmtaConfigError, AmtaParseError) as exc:
+        typer.echo(f"FAIL: {exc}", err=True)
+        raise typer.Exit(code=3) from exc
+
+    if result.status is ValidationStatus.FAIL:
+        _print_validation_result(result)
+        raise typer.Exit(code=3)
+
+    graph_model = build_graph_model(nodes, config)
+    nodes_by_id = {node.id: node for node in graph_model.nodes}
+
+    if node_id not in nodes_by_id:
+        typer.echo(f"FAIL: node not found: {node_id}", err=True)
+        raise typer.Exit(code=3)
+
+    rows = _query_related_nodes(
+        graph_model,
+        node_id=node_id,
+        direction=direction,
+        depth=depth,
+    )
+
+    typer.echo(f"QUERY {node_id} direction={direction.value} depth={depth}")
+
+    if not rows:
+        typer.echo("_No related nodes._")
+        return
+
+    for distance, row_direction, relation, source_id, target_id, related_node in rows:
+        typer.echo(
+            f"- depth={distance} "
+            f"direction={row_direction} "
+            f"relation={relation} "
+            f"edge={source_id}->{target_id} "
+            f"node={related_node.id} "
+            f"type={related_node.type.value} "
+            f"status={related_node.status.value} "
+            f"title={related_node.title}"
+        )
+
+
+
 @app.command("schemas")
 def schemas_command(
     output: Annotated[
@@ -194,6 +278,83 @@ def schemas_command(
     written = write_schemas(output)
     for path in written.values():
         typer.echo(f"PASS: wrote {path}")
+
+
+
+def _query_related_nodes(
+    graph_model: GraphModel,
+    *,
+    node_id: str,
+    direction: QueryDirection,
+    depth: int,
+) -> list[tuple[int, str, str, str, str, NodeModel]]:
+    nodes_by_id = {node.id: node for node in graph_model.nodes}
+
+    outgoing: dict[str, list[tuple[str, str, str]]] = {}
+    incoming: dict[str, list[tuple[str, str, str]]] = {}
+
+    for edge in sorted(
+        graph_model.edges,
+        key=lambda item: (item.source, item.relation, item.target),
+    ):
+        outgoing.setdefault(edge.source, []).append((edge.relation, edge.source, edge.target))
+        incoming.setdefault(edge.target, []).append((edge.relation, edge.source, edge.target))
+
+    rows: list[tuple[int, str, str, str, str, NodeModel]] = []
+    seen: set[tuple[str, str]] = set()
+    frontier: list[str] = [node_id]
+
+    for distance in range(1, depth + 1):
+        next_frontier: list[str] = []
+
+        for current_id in sorted(frontier):
+            if direction in {QueryDirection.DOWNSTREAM, QueryDirection.BOTH}:
+                for relation, source_id, target_id in outgoing.get(current_id, []):
+                    key = ("downstream", target_id)
+                    if key not in seen and target_id in nodes_by_id:
+                        seen.add(key)
+                        next_frontier.append(target_id)
+                        rows.append(
+                            (
+                                distance,
+                                "downstream",
+                                relation,
+                                source_id,
+                                target_id,
+                                nodes_by_id[target_id],
+                            )
+                        )
+
+            if direction in {QueryDirection.UPSTREAM, QueryDirection.BOTH}:
+                for relation, source_id, target_id in incoming.get(current_id, []):
+                    key = ("upstream", source_id)
+                    if key not in seen and source_id in nodes_by_id:
+                        seen.add(key)
+                        next_frontier.append(source_id)
+                        rows.append(
+                            (
+                                distance,
+                                "upstream",
+                                relation,
+                                source_id,
+                                target_id,
+                                nodes_by_id[source_id],
+                            )
+                        )
+
+        frontier = sorted(set(next_frontier))
+
+    return sorted(
+        rows,
+        key=lambda item: (
+            item[0],
+            item[1],
+            item[5].id,
+            item[2],
+            item[3],
+            item[4],
+        ),
+    )
 
 
 def _print_validation_result(result: ValidationResult) -> None:
