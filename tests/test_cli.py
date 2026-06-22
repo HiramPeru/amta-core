@@ -419,3 +419,119 @@ Body.
     assert "node=TSK-001" in result.output
     assert "edge=DEC-001->MOD-001" in result.output
     assert "edge=MOD-001->TSK-001" in result.output
+
+def test_cli_query_both_direction_excludes_root_return(tmp_path: Path) -> None:
+    runner.invoke(app, ["init", "--path", str(tmp_path)])
+    nodes_dir = tmp_path / ".amta" / "nodes"
+
+    (nodes_dir / "DEC-001.md").write_text(
+        """
+---
+id: DEC-001
+type: decision
+status: active
+title: First Decision
+summary: First decision summary.
+owner: architecture
+revision: 1
+created: 2026-06-21
+updated: 2026-06-21
+tags: []
+relations:
+  - type: impacts
+    target: MOD-001
+---
+
+Body.
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    (nodes_dir / "CON-001.md").write_text(
+        """
+---
+id: CON-001
+type: constraint
+status: active
+title: Root Constraint
+summary: Root constraint summary.
+owner: architecture
+revision: 1
+created: 2026-06-21
+updated: 2026-06-21
+tags: []
+relations:
+  - type: impacts
+    target: MOD-001
+---
+
+Body.
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    (nodes_dir / "MOD-001.md").write_text(
+        """
+---
+id: MOD-001
+type: module
+status: active
+title: Core Module
+summary: Core module summary.
+owner: architecture
+revision: 1
+created: 2026-06-21
+updated: 2026-06-21
+tags: []
+relations:
+  - type: impacts
+    target: TSK-001
+---
+
+Body.
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    (nodes_dir / "TSK-001.md").write_text(
+        """
+---
+id: TSK-001
+type: task
+status: active
+title: Follow-up Task
+summary: Follow-up task summary.
+owner: architecture
+revision: 1
+created: 2026-06-21
+updated: 2026-06-21
+tags: []
+relations: []
+---
+
+Body.
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "query",
+            "--path",
+            str(tmp_path),
+            "--id",
+            "MOD-001",
+            "--direction",
+            "both",
+            "--depth",
+            "2",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "QUERY MOD-001 direction=both depth=2" in result.output
+    assert "node=DEC-001" in result.output
+    assert "node=CON-001" in result.output
+    assert "node=TSK-001" in result.output
+    assert "node=MOD-001" not in "\n".join(result.output.splitlines()[1:])

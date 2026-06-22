@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.3-dev
+
+- Fix `amta query --direction both` so traversal does not return the queried root node as a related result.
+- Add regression coverage from Menu To Go dogfooding.
+
 ## 0.2.2-dev
 
 - Add coverage for `amta query --direction both`.

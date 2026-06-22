@@ -313,7 +313,7 @@ def _query_related_nodes(
             if direction in {QueryDirection.DOWNSTREAM, QueryDirection.BOTH}:
                 for relation, source_id, target_id in outgoing.get(current_id, []):
                     key = ("downstream", target_id)
-                    if key not in seen and target_id in nodes_by_id:
+                    if target_id != node_id and key not in seen and target_id in nodes_by_id:
                         seen.add(key)
                         next_frontier.append(target_id)
                         rows.append(
@@ -330,7 +330,7 @@ def _query_related_nodes(
             if direction in {QueryDirection.UPSTREAM, QueryDirection.BOTH}:
                 for relation, source_id, target_id in incoming.get(current_id, []):
                     key = ("upstream", source_id)
-                    if key not in seen and source_id in nodes_by_id:
+                    if source_id != node_id and key not in seen and source_id in nodes_by_id:
                         seen.add(key)
                         next_frontier.append(source_id)
                         rows.append(
